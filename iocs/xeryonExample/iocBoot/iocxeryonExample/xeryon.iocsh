@@ -1,0 +1,13 @@
+# Connect to controller
+drvAsynSerialPortConfigure("XERYON_USB", "/dev/ttyACM0", 0, 0, 0)
+
+# Create the controller object
+XeryonMotorCreateController("XERYON_1", "XERYON_USB", 1, 250, 1000)
+
+# load motor records
+dbLoadTemplate("xeryon.substitutions", "P=$(PREFIX)")
+
+# load asyn record for debugging
+asynOctetSetOutputEos("XERYON_USB",0,"\r")
+asynOctetSetInputEos("XERYON_USB",0,"\r")
+dbLoadRecords("$(ASYN)/db/asynRecord.db", "P=$(PREFIX), R=asyn_1, PORT=XERYON_USB, ADDR=0, OMAX=$(OUT_BUFF=1000), IMAX=$(IN_BUFF=1000)")

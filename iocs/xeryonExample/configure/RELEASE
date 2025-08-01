@@ -1,0 +1,14 @@
+# RELEASE Location of external products
+# Run "gnumake clean uninstall install" in the application
+# top directory each time this file is changed.
+##############################################################################
+
+MOTOR_XERYON = $(TOP)/../..
+-include $(MOTOR_XERYON)/configure/RELEASE
+
+# These lines allow developers to override these RELEASE settings
+# without having to modify this file directly.
+-include $(TOP)/../RELEASE.local
+-include $(TOP)/../RELEASE.$(EPICS_HOST_ARCH).local
+-include $(TOP)/configure/RELEASE.local
+
