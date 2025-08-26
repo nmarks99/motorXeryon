@@ -4,6 +4,7 @@
 #include <epicsExport.h>
 #include <epicsThread.h>
 #include <iocsh.h>
+#include <iostream>
 
 #include "xeryon_driver.hpp"
 
@@ -56,7 +57,7 @@ extern "C" int XeryonMotorCreateController(const char *portName, const char *Xer
                                   XeryonMotorPortName,
                                   numAxes,
                                   movingPollPeriod / 1000.,
-    
+
                                   idlePollPeriod / 1000.);
     (void)pXeryonMotorController;
     return (asynSuccess);
@@ -104,23 +105,57 @@ void XeryonMotorAxis::report(FILE *fp, int level) {
 
 asynStatus XeryonMotorAxis::stop(double acceleration) {
     asynStatus asyn_status = asynSuccess;
+
+    sprintf(pC_->outString_, "STOP");
+    asyn_status = pC_->writeReadController();
+
     callParamCallbacks();
     return asyn_status;
 }
 
 asynStatus XeryonMotorAxis::move(double position, int relative, double minVelocity, double maxVelocity, double acceleration) {
     asynStatus asyn_status = asynSuccess;
+
+    std::ostringstream oss;
+    oss << "DPOS=" << std::to_string(position);
+    sprintf(pC_->outString_, "%s", oss.str().c_str());
+    asyn_status = pC_->writeReadController();
+
+    callParamCallbacks();
+    return asyn_status;
+}
+
+
+asynStatus XeryonMotorAxis::poll(bool *moving) {
+    asynStatus asyn_status = asynSuccess;
+
+    // encoder position
+    sprintf(pC_->outString_, "EPOS=?");
+    asyn_status = pC_->writeReadController();
+    if (asyn_status) {
+        goto skip;
+    }
+    std::cout << "EPOS = " << pC_->inString_ << "\n";
+
+    // Status bits 0-21
+    // 5: Motor on
+    // 6: Closed loop
+    // 10: Position reached
+    // 14: Left end stop
+    // 15: Right end stop
+    sprintf(pC_->outString_, "STAT");
+    asyn_status = pC_->writeReadController();
+    if (asyn_status) {
+        goto skip;
+    }
+    std::cout << "STAT = " << pC_->inString_ << "\n";
+
+skip:
     callParamCallbacks();
     return asyn_status;
 }
 
 asynStatus XeryonMotorAxis::home(double minVelocity, double maxVelocity, double acceleration, int forwards) {
-    asynStatus asyn_status = asynSuccess;
-    callParamCallbacks();
-    return asyn_status;
-}
-
-asynStatus XeryonMotorAxis::poll(bool *moving) {
     asynStatus asyn_status = asynSuccess;
     callParamCallbacks();
     return asyn_status;
