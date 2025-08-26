@@ -2,6 +2,22 @@
 #include "asynMotorAxis.h"
 #include "asynMotorController.h"
 #include <sstream>
+#include <charconv>
+
+struct StatusBits {
+    bool AmplifiersEnabled;
+    bool EndStop;
+    bool ThermalProtection1;
+    bool ThermalProtection2;
+    bool ForceZero;
+    bool MotorOn;
+    bool ClosedLoop;
+    bool EncoderAtIndex;
+    bool EncoderValid;
+    bool SearchingIndex;
+    bool PositionReached;
+    bool ErrorCompensation;
+};
 
 class epicsShareClass XeryonMotorAxis : public asynMotorAxis {
   public:

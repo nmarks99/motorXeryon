@@ -5,17 +5,12 @@
 #include <epicsThread.h>
 #include <iocsh.h>
 #include <iostream>
+#include <optional>
 
 #include "xeryon_driver.hpp"
 
+// TODO
 constexpr int NUM_PARAMS = 0;
-
-// actual encoder res is ??? microdegrees
-// MRES -> EGU
-// 1.0  -> microdegrees
-// 1e-3 -> millidegrees
-// 1e-6 -> degrees
-// constexpr double DRIVER_RESOLUTION = ?;
 
 XeryonMotorController::XeryonMotorController(const char *portName, const char *XeryonMotorPortName,
                                            int numAxes, double movingPollPeriod,
@@ -43,9 +38,17 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     for (axis = 0; axis < numAxes; axis++) {
         pAxis = new XeryonMotorAxis(this, axis);
     }
-
     // to avoid compiler warning, maybe just don't create pAxis variable at all?
     (void)pAxis;
+
+    // Set INFO=0 to avoid controller from sending stuff unprompted
+    sprintf(this->outString_, "INFO=0");
+    writeController();
+
+    // TODO: stage type should be configurable
+    // configure driver for XRTA rotation stage
+    sprintf(this->outString_, "XRTA=109");
+    writeController();
 
     startPoller(movingPollPeriod, idlePollPeriod, 0);
 }
@@ -107,7 +110,8 @@ asynStatus XeryonMotorAxis::stop(double acceleration) {
     asynStatus asyn_status = asynSuccess;
 
     sprintf(pC_->outString_, "STOP");
-    asyn_status = pC_->writeReadController();
+    std::cout << "stop called" << std::endl;
+    asyn_status = pC_->writeController();
 
     callParamCallbacks();
     return asyn_status;
@@ -119,15 +123,43 @@ asynStatus XeryonMotorAxis::move(double position, int relative, double minVeloci
     std::ostringstream oss;
     oss << "DPOS=" << std::to_string(position);
     sprintf(pC_->outString_, "%s", oss.str().c_str());
-    asyn_status = pC_->writeReadController();
+    asyn_status = pC_->writeController();
 
     callParamCallbacks();
     return asyn_status;
 }
 
+StatusBits get_status(int status) {
+    StatusBits s{};
+    s.AmplifiersEnabled  = status & (1 << 0);
+    s.EndStop            = status & (1 << 1);
+    s.ThermalProtection1 = status & (1 << 2);
+    s.ThermalProtection2 = status & (1 << 3);
+    s.ForceZero          = status & (1 << 4);
+    s.MotorOn            = status & (1 << 5);
+    s.ClosedLoop         = status & (1 << 6);
+    s.EncoderAtIndex     = status & (1 << 7);
+    s.EncoderValid       = status & (1 << 8);
+    s.SearchingIndex     = status & (1 << 9);
+    s.PositionReached    = status & (1 << 10);
+    s.ErrorCompensation  = status & (1 << 11);
+    return s;
+}
+
+std::optional<double> parse_reply(const std::string &str) {
+    std::string value_str;
+    if (auto ind = str.find('='); ind != std::string::npos) {
+        value_str = str.substr(ind+1);
+    }
+    return std::stod(value_str);
+}
 
 asynStatus XeryonMotorAxis::poll(bool *moving) {
     asynStatus asyn_status = asynSuccess;
+
+    std::optional<double> epos = 0.0;
+    std::optional<double> stat = 0.0;
+    StatusBits status_bits;
 
     // encoder position
     sprintf(pC_->outString_, "EPOS=?");
@@ -135,20 +167,43 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     if (asyn_status) {
         goto skip;
     }
-    std::cout << "EPOS = " << pC_->inString_ << "\n";
 
-    // Status bits 0-21
-    // 5: Motor on
-    // 6: Closed loop
-    // 10: Position reached
-    // 14: Left end stop
-    // 15: Right end stop
-    sprintf(pC_->outString_, "STAT");
+    epos = parse_reply(pC_->inString_);
+    if (epos.has_value()) {
+        setDoubleParam(pC_->motorPosition_, epos.value());
+        setDoubleParam(pC_->motorEncoderPosition_, epos.value());
+    }
+
+    sprintf(pC_->outString_, "STAT=?");
     asyn_status = pC_->writeReadController();
     if (asyn_status) {
         goto skip;
     }
-    std::cout << "STAT = " << pC_->inString_ << "\n";
+
+    stat = parse_reply(pC_->inString_);
+    if (stat.has_value()) {
+        status_bits = get_status(stat.value());
+        std::cout << "----------------------------\n";
+        std::cout << "Amplifiers enabled   : " << std::boolalpha << status_bits.AmplifiersEnabled   << "\n";
+        std::cout << "End stop             : " << std::boolalpha << status_bits.EndStop             << "\n";
+        std::cout << "Thermal protection 1 : " << std::boolalpha << status_bits.ThermalProtection1  << "\n";
+        std::cout << "Thermal protection 2 : " << std::boolalpha << status_bits.ThermalProtection2  << "\n";
+        std::cout << "Force zero           : " << std::boolalpha << status_bits.ForceZero           << "\n";
+        std::cout << "Motor on             : " << std::boolalpha << status_bits.MotorOn             << "\n";
+        std::cout << "Closed loop          : " << std::boolalpha << status_bits.ClosedLoop          << "\n";
+        std::cout << "Encoder at index     : " << std::boolalpha << status_bits.EncoderAtIndex      << "\n";
+        std::cout << "Encoder valid        : " << std::boolalpha << status_bits.EncoderValid        << "\n";
+        std::cout << "Searching index      : " << std::boolalpha << status_bits.SearchingIndex      << "\n";
+        std::cout << "Position reached     : " << std::boolalpha << status_bits.PositionReached     << "\n";
+        std::cout << "Error compensation   : " << std::boolalpha << status_bits.ErrorCompensation   << "\n";
+        std::cout << "----------------------------\n";
+
+        setIntegerParam(pC_->motorStatusDone_, !status_bits.MotorOn);
+        setIntegerParam(pC_->motorStatusMoving_, status_bits.MotorOn);
+        *moving = status_bits.MotorOn;
+
+        setIntegerParam(pC_->motorStatusPowerOn_, status_bits.AmplifiersEnabled);
+    }
 
 skip:
     callParamCallbacks();
@@ -157,12 +212,25 @@ skip:
 
 asynStatus XeryonMotorAxis::home(double minVelocity, double maxVelocity, double acceleration, int forwards) {
     asynStatus asyn_status = asynSuccess;
+
+    sprintf(pC_->outString_, "HOME");
+    asyn_status = pC_->writeController();
     callParamCallbacks();
     return asyn_status;
 }
 
 asynStatus XeryonMotorAxis::setClosedLoop(bool closedLoop) {
     asynStatus asyn_status = asynSuccess;
+
+    if (closedLoop) {
+        // enables both amplifiers
+        sprintf(pC_->outString_, "ENBL=3");
+    } else {
+        // disables both amplifiers
+        sprintf(pC_->outString_, "ENBL=0");
+    }
+    asyn_status = pC_->writeController();
+
     callParamCallbacks();
     return asyn_status;
 }
