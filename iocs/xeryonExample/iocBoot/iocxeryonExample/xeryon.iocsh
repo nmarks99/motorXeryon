@@ -2,7 +2,7 @@
 drvAsynSerialPortConfigure("XERYON_USB", "/dev/ttyACM0", 0, 0, 0)
 
 # Create the controller object
-# XeryonMotorCreateController(MOTOR_PORT, ASYN_PORT, NUM AXES, moving_poll_ms, idle_poll_ms)
+# XeryonMotorCreateController(MOTOR_PORT, ASYN_PORT, NUM AXES, MOVING_POLL_MS, IDLE_POLL_MS)
 XeryonMotorCreateController("XERYON_1", "XERYON_USB", 1, 10, 200)
 
 # load motor records

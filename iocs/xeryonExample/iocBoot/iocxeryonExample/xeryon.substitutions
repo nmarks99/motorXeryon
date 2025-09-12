@@ -4,5 +4,5 @@ file "$(MOTOR)/db/asyn_motor.db"
 {
 pattern
 {N,   M,       DTYP,         PORT,    ADDR,  DESC,          EGU,  DIR,  VELO,  VBAS,  ACCL,  BDST,  BVEL,  BACC,      MRES,  PREC, DHLM,  DLLM, RTRY, INIT}
-{1,  "m$(N)",  "asynMotor",  XERYON_1,    0,  "motor $(N)",  deg,  Pos,     1,   .1,     .2,     0,     1,    .2,  0.00625,   6,  100,  -100,    0,   ""}
+{1,  "m$(N)",  "asynMotor",  XERYON_1,    0,  "motor $(N)",  deg,  Pos,     50,   .1,     .2,     0,     1,    .2,  0.00625,   5,  100,  -100,    0,   ""}
 }
