@@ -1,0 +1,11 @@
+record(longin, "$(P)$(M):Frequency1") {
+    field(DTYP, "asynInt32")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY1")
+}
+
+record(longin, "$(P)$(M):Frequency2") {
+    field(DTYP, "asynInt32")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY2")
+}

@@ -4,6 +4,9 @@
 #include <sstream>
 #include <charconv>
 
+static constexpr char FREQUENCY1_STRING[] = "FREQUENCY1";
+static constexpr char FREQUENCY2_STRING[] = "FREQUENCY2";
+
 struct StatusBits {
     bool AmplifiersEnabled;
     bool EndStop;
@@ -59,6 +62,9 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
     /// \param[in] axisNo Axis index number
     /// \returns NULL if the axis number is invalid
     XeryonMotorAxis *getAxis(int axisNo);
+ protected:
+    int frequency1Index_;
+    int frequency2Index_;
 
     friend class XeryonMotorAxis;
 };

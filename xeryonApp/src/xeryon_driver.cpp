@@ -12,7 +12,16 @@
 constexpr double DRIVER_RESOLUTION = 0.00625; // deg/count
 
 // TODO
-constexpr int NUM_PARAMS = 0;
+constexpr int NUM_PARAMS = 1;
+
+std::optional<int> parse_reply(const std::string &str) {
+    std::string value_str;
+    if (auto ind = str.find('='); ind != std::string::npos) {
+        value_str = str.substr(ind + 1);
+    }
+    return std::stod(value_str);
+}
+
 
 XeryonMotorController::XeryonMotorController(const char *portName, const char *XeryonMotorPortName,
                                              int numAxes, double movingPollPeriod,
@@ -27,6 +36,9 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     asynStatus status;
     int axis;
     static const char *functionName = "XeryonMotorController::XeryonMotorController";
+
+    createParam(FREQUENCY1_STRING, asynParamInt32, &frequency1Index_);
+    createParam(FREQUENCY2_STRING, asynParamInt32, &frequency2Index_);
 
     // Connect to motor controller
     status = pasynOctetSyncIO->connect(XeryonMotorPortName, 0, &pasynUserController_, NULL);
@@ -48,6 +60,7 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     // configure driver for XRTA rotation stage
     sprintf(this->outString_, "XRTA=109");
     writeController();
+
 
     startPoller(movingPollPeriod, idlePollPeriod, 0);
 }
@@ -145,81 +158,65 @@ StatusBits get_status(int status) {
     return s;
 }
 
-std::optional<double> parse_reply(const std::string &str) {
-    std::string value_str;
-    if (auto ind = str.find('='); ind != std::string::npos) {
-        value_str = str.substr(ind + 1);
-    }
-    return std::stod(value_str);
-}
-
-// // Convert from [-180, 180] → [0, 360)
-// inline double to360(double angle) {
-    // // Shift negatives up by 360
-    // if (angle < 0) {
-        // angle += 360.0;
-    // }
-    // return angle;
-// }
-
-// // Convert from [0, 360) → [-180, 180)
-// inline double to180(double angle) {
-    // if (angle > 180.0) {
-        // angle -= 360.0;
-    // }
-    // return angle;
-// }
-
 asynStatus XeryonMotorAxis::poll(bool *moving) {
     asynStatus asyn_status = asynSuccess;
 
-    std::optional<double> epos = 0.0;
-    std::optional<double> stat = 0.0;
+    std::optional<int> epos = 0;
+    std::optional<int> stat = 0;
+    std::optional<int> freq1 = 0;
+    std::optional<int> freq2 = 0;
     StatusBits status_bits;
 
-    // encoder position
+    // Zone 1 frequency
+    sprintf(pC_->outString_, "FREQ=?");
+    asyn_status = pC_->writeReadController();
+    if (asyn_status) {
+        goto skip;
+    }
+    freq1 = parse_reply(pC_->inString_);
+    if (freq1.has_value()) {
+	pC_->setIntegerParam(pC_->frequency1Index_, freq1.value());
+    }
+
+    // Zone 2 frequency
+    sprintf(pC_->outString_, "FRQ2=?");
+    asyn_status = pC_->writeReadController();
+    if (asyn_status) {
+        goto skip;
+    }
+    freq2 = parse_reply(pC_->inString_);
+    if (freq1.has_value()) {
+	pC_->setIntegerParam(pC_->frequency2Index_, freq2.value());
+    }
+
+    // Encoder position
     sprintf(pC_->outString_, "EPOS=?");
     asyn_status = pC_->writeReadController();
     if (asyn_status) {
         goto skip;
     }
-
     epos = parse_reply(pC_->inString_);
     if (epos.has_value()) {
-	const double rbv = epos.value();
+	int rbv = epos.value();
+	if (rbv > 28800) {
+	    rbv = rbv - 57600;
+	}
         setDoubleParam(pC_->motorPosition_, rbv);
         setDoubleParam(pC_->motorEncoderPosition_, rbv);
     }
 
+    // get status word
     sprintf(pC_->outString_, "STAT=?");
     asyn_status = pC_->writeReadController();
     if (asyn_status) {
         goto skip;
     }
-
     stat = parse_reply(pC_->inString_);
     if (stat.has_value()) {
         status_bits = get_status(stat.value());
-        // std::cout << "----------------------------\n";
-        // std::cout << "Amplifiers enabled   : " << std::boolalpha << status_bits.AmplifiersEnabled
-        // << "\n"; std::cout << "End stop             : " << std::boolalpha << status_bits.EndStop
-        // << "\n"; std::cout << "Thermal protection 1 : " << std::boolalpha <<
-        // status_bits.ThermalProtection1  << "\n"; std::cout << "Thermal protection 2 : " <<
-        // std::boolalpha << status_bits.ThermalProtection2  << "\n"; std::cout << "Force zero : "
-        // << std::boolalpha << status_bits.ForceZero           << "\n"; std::cout << "Motor on : "
-        // << std::boolalpha << status_bits.MotorOn             << "\n"; std::cout << "Closed loop
-        // : " << std::boolalpha << status_bits.ClosedLoop          << "\n"; std::cout << "Encoder
-        // at index     : " << std::boolalpha << status_bits.EncoderAtIndex      << "\n"; std::cout
-        // << "Encoder valid        : " << std::boolalpha << status_bits.EncoderValid        <<
-        // "\n"; std::cout << "Searching index      : " << std::boolalpha <<
-        // status_bits.SearchingIndex      << "\n"; std::cout << "Position reached     : " <<
-        // std::boolalpha << status_bits.PositionReached     << "\n"; std::cout << "Error
-        // compensation   : " << std::boolalpha << status_bits.ErrorCompensation   << "\n";
-        // std::cout << "----------------------------\n";
         setIntegerParam(pC_->motorStatusDone_, !status_bits.MotorOn);
         setIntegerParam(pC_->motorStatusMoving_, status_bits.MotorOn);
         *moving = status_bits.MotorOn;
-
         setIntegerParam(pC_->motorStatusPowerOn_, status_bits.AmplifiersEnabled);
     }
 
