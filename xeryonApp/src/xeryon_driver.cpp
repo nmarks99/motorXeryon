@@ -122,18 +122,14 @@ asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 val
         }
     }
     else if (function == frequency1Index_) {
-	// Zone 1 frequency
 	sprintf(outString_, "FREQ=%d", value);
-	printf(outString_, value);
 	asyn_status = this->writeController();
 	if (asyn_status) {
 	    goto skip;
 	}
     }
     else if (function == frequency2Index_) {
-	// Zone 2 frequency
 	sprintf(outString_, "FRQ2=%d", value);
-	printf(outString_, value);
 	asyn_status = this->writeController();
 	if (asyn_status) {
 	    goto skip;

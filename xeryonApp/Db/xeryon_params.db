@@ -21,4 +21,5 @@ record(longin, "$(P)$(M):Freq2RBV") {
 record(bo, "$(P)$(M):ReadParams") {
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))READ_PARAMS")
+    field(SCAN, "$(SCAN=Passive)")
 }
