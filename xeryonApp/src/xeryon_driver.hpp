@@ -1,9 +1,10 @@
 #include "asynDriver.h"
 #include "asynMotorAxis.h"
 #include "asynMotorController.h"
-#include <sstream>
 #include <charconv>
+#include <sstream>
 
+static constexpr char READ_PARAMS_STRING[] = "READ_PARAMS";
 static constexpr char FREQUENCY1_STRING[] = "FREQUENCY1";
 static constexpr char FREQUENCY2_STRING[] = "FREQUENCY2";
 
@@ -33,6 +34,8 @@ class epicsShareClass XeryonMotorAxis : public asynMotorAxis {
     asynStatus move(double position, int relative, double minVelocity, double maxVelocity,
                     double acceleration);
 
+    asynStatus update_params();
+
   private:
     XeryonMotorController *pC_;
     int axisIndex_;
@@ -50,7 +53,7 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
     /// \param[in] movingPollPeriod     The time between polls when any axis is moving
     /// \param[in] idlePollPeriod       The time between polls when no axis is moving
     XeryonMotorController(const char *portName, const char *XeryonMotorController, int numAxes,
-                         double movingPollPeriod, double idlePollPeriod);
+                          double movingPollPeriod, double idlePollPeriod);
     void report(FILE *fp, int level);
 
     /// \brief Returns a pointer to a XeryonMotorAxis object
@@ -62,7 +65,11 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
     /// \param[in] axisNo Axis index number
     /// \returns NULL if the axis number is invalid
     XeryonMotorAxis *getAxis(int axisNo);
- protected:
+
+    asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+
+  protected:
+    int readParamsIndex_;
     int frequency1Index_;
     int frequency2Index_;
 

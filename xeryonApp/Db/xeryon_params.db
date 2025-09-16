@@ -1,11 +1,24 @@
-record(longin, "$(P)$(M):Frequency1") {
+record(longout, "$(P)$(M):Freq1") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY1")
+}
+record(longin, "$(P)$(M):Freq1RBV") {
     field(DTYP, "asynInt32")
     field(SCAN, "I/O Intr")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY1")
 }
 
-record(longin, "$(P)$(M):Frequency2") {
+record(longout, "$(P)$(M):Freq2") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY2")
+}
+record(longin, "$(P)$(M):Freq2RBV") {
     field(DTYP, "asynInt32")
     field(SCAN, "I/O Intr")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))FREQUENCY2")
+}
+
+record(bo, "$(P)$(M):ReadParams") {
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))READ_PARAMS")
 }

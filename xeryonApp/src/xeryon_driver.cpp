@@ -11,17 +11,30 @@
 
 constexpr double DRIVER_RESOLUTION = 0.00625; // deg/count
 
-// TODO
-constexpr int NUM_PARAMS = 1;
+constexpr int NUM_PARAMS = 3;
 
+
+// std::optional<int> parse_reply(const std::string &str) {
+    // std::string value_str;
+    // if (auto ind = str.find('='); ind != std::string::npos) {
+        // value_str = str.substr(ind + 1);
+    // }
+    // return std::stoi(value_str);
+// }
+
+// Parse reply from commands sent from the controller
+// E.g. send "EPOS=?", receive "EPOS=1000".
+// parse_reply("EPOS=1000") returns 1000 as an optional<int>
 std::optional<int> parse_reply(const std::string &str) {
-    std::string value_str;
     if (auto ind = str.find('='); ind != std::string::npos) {
-        value_str = str.substr(ind + 1);
+        try {
+            return std::stoi(str.substr(ind + 1));
+        } catch (...) {
+            return std::nullopt; // invalid integer
+        }
     }
-    return std::stod(value_str);
+    return std::nullopt; // '=' not found
 }
-
 
 XeryonMotorController::XeryonMotorController(const char *portName, const char *XeryonMotorPortName,
                                              int numAxes, double movingPollPeriod,
@@ -39,6 +52,7 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
 
     createParam(FREQUENCY1_STRING, asynParamInt32, &frequency1Index_);
     createParam(FREQUENCY2_STRING, asynParamInt32, &frequency2Index_);
+    createParam(READ_PARAMS_STRING, asynParamInt32, &readParamsIndex_);
 
     // Connect to motor controller
     status = pasynOctetSyncIO->connect(XeryonMotorPortName, 0, &pasynUserController_, NULL);
@@ -60,7 +74,6 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     // configure driver for XRTA rotation stage
     sprintf(this->outString_, "XRTA=109");
     writeController();
-
 
     startPoller(movingPollPeriod, idlePollPeriod, 0);
 }
@@ -89,6 +102,48 @@ XeryonMotorAxis *XeryonMotorController::getAxis(asynUser *pasynUser) {
 
 XeryonMotorAxis *XeryonMotorController::getAxis(int axisNo) {
     return static_cast<XeryonMotorAxis *>(asynMotorController::getAxis(axisNo));
+}
+
+asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 value) {
+
+    int function = pasynUser->reason;
+    asynStatus asyn_status = asynSuccess;
+    XeryonMotorAxis *pAxis;
+
+    pAxis = this->getAxis(pasynUser);
+    if (!pAxis) {
+        return asynError;
+    };
+
+    if (function == readParamsIndex_) {
+        asyn_status = pAxis->update_params();
+        if (asyn_status) {
+            goto skip;
+        }
+    }
+    else if (function == frequency1Index_) {
+	// Zone 1 frequency
+	sprintf(outString_, "FREQ=%d", value);
+	printf(outString_, value);
+	asyn_status = this->writeController();
+	if (asyn_status) {
+	    goto skip;
+	}
+    }
+    else if (function == frequency2Index_) {
+	// Zone 2 frequency
+	sprintf(outString_, "FRQ2=%d", value);
+	printf(outString_, value);
+	asyn_status = this->writeController();
+	if (asyn_status) {
+	    goto skip;
+	}
+    }
+
+skip:
+    pAxis->callParamCallbacks();
+    callParamCallbacks();
+    return asyn_status;
 }
 
 XeryonMotorAxis::XeryonMotorAxis(XeryonMotorController *pC, int axisNo)
@@ -158,14 +213,10 @@ StatusBits get_status(int status) {
     return s;
 }
 
-asynStatus XeryonMotorAxis::poll(bool *moving) {
+asynStatus XeryonMotorAxis::update_params() {
     asynStatus asyn_status = asynSuccess;
-
-    std::optional<int> epos = 0;
-    std::optional<int> stat = 0;
     std::optional<int> freq1 = 0;
     std::optional<int> freq2 = 0;
-    StatusBits status_bits;
 
     // Zone 1 frequency
     sprintf(pC_->outString_, "FREQ=?");
@@ -175,7 +226,7 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     }
     freq1 = parse_reply(pC_->inString_);
     if (freq1.has_value()) {
-	pC_->setIntegerParam(pC_->frequency1Index_, freq1.value());
+        pC_->setIntegerParam(pC_->frequency1Index_, freq1.value());
     }
 
     // Zone 2 frequency
@@ -186,8 +237,20 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     }
     freq2 = parse_reply(pC_->inString_);
     if (freq1.has_value()) {
-	pC_->setIntegerParam(pC_->frequency2Index_, freq2.value());
+        pC_->setIntegerParam(pC_->frequency2Index_, freq2.value());
     }
+
+skip:
+    callParamCallbacks();
+    return asyn_status;
+}
+
+asynStatus XeryonMotorAxis::poll(bool *moving) {
+    asynStatus asyn_status = asynSuccess;
+
+    std::optional<int> epos = 0;
+    std::optional<int> stat = 0;
+    StatusBits status_bits;
 
     // Encoder position
     sprintf(pC_->outString_, "EPOS=?");
@@ -197,10 +260,10 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     }
     epos = parse_reply(pC_->inString_);
     if (epos.has_value()) {
-	int rbv = epos.value();
-	if (rbv > 28800) {
-	    rbv = rbv - 57600;
-	}
+        int rbv = epos.value();
+        if (rbv > 28800) {
+            rbv = rbv - 57600;
+        }
         setDoubleParam(pC_->motorPosition_, rbv);
         setDoubleParam(pC_->motorEncoderPosition_, rbv);
     }
