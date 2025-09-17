@@ -10,17 +10,7 @@
 #include "xeryon_driver.hpp"
 
 constexpr double DRIVER_RESOLUTION = 0.00625; // deg/count
-
-constexpr int NUM_PARAMS = 3;
-
-
-// std::optional<int> parse_reply(const std::string &str) {
-    // std::string value_str;
-    // if (auto ind = str.find('='); ind != std::string::npos) {
-        // value_str = str.substr(ind + 1);
-    // }
-    // return std::stoi(value_str);
-// }
+constexpr int NUM_PARAMS = 6;
 
 // Parse reply from commands sent from the controller
 // E.g. send "EPOS=?", receive "EPOS=1000".
@@ -53,6 +43,27 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     createParam(FREQUENCY1_STRING, asynParamInt32, &frequency1Index_);
     createParam(FREQUENCY2_STRING, asynParamInt32, &frequency2Index_);
     createParam(READ_PARAMS_STRING, asynParamInt32, &readParamsIndex_);
+    createParam(CONTROL_TIMEOUT_STRING, asynParamInt32, &controlTimeoutIndex_);
+    createParam(CONTROL_TIMEOUT2_STRING, asynParamInt32, &controlTimeout2Index_);
+    createParam(CONTROL_FREQUENCY_STRING, asynParamInt32, &controlFreqIndex_);
+    createParam(POS_TOLERANCE_STRING, asynParamInt32, &posToleranceIndex_);
+    createParam(POS_TOLERANCE2_STRING, asynParamInt32, &posTolerance2Index_);
+    createParam(STATUS_BITS_STRING, asynParamInt32, &statusBitsIndex_);
+    createParam(ZONE1_STRING, asynParamInt32, &zone1Index_);
+    createParam(ZONE2_STRING, asynParamInt32, &zone2Index_);
+
+    // Map controller command strings to the associated asyn parameter index
+    cmd_param_map_ = std::unordered_map<std::string, int> {
+	{"FREQ", frequency1Index_},
+	{"FRQ2", frequency2Index_},
+	{"CFRQ", controlFreqIndex_},
+	{"PTOL", posToleranceIndex_},
+	{"PTO2", posTolerance2Index_},
+	{"TOUT", controlTimeoutIndex_},
+	{"TOU2", controlTimeout2Index_},
+	{"ZON1", zone1Index_},
+	{"ZON2", zone2Index_},
+    };
 
     // Connect to motor controller
     status = pasynOctetSyncIO->connect(XeryonMotorPortName, 0, &pasynUserController_, NULL);
@@ -120,19 +131,15 @@ asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 val
         if (asyn_status) {
             goto skip;
         }
-    }
-    else if (function == frequency1Index_) {
-	sprintf(outString_, "FREQ=%d", value);
-	asyn_status = this->writeController();
-	if (asyn_status) {
-	    goto skip;
-	}
-    }
-    else if (function == frequency2Index_) {
-	sprintf(outString_, "FRQ2=%d", value);
-	asyn_status = this->writeController();
-	if (asyn_status) {
-	    goto skip;
+    } else {
+	for (const auto &[cmd, param_index] : cmd_param_map_) {
+	    if (function == param_index) {
+		sprintf(outString_, "%s=%d", cmd.c_str(), value);
+		asyn_status = this->writeController();
+		if (asyn_status) {
+		    goto skip;
+		}
+	    }
 	}
     }
 
@@ -140,6 +147,24 @@ skip:
     pAxis->callParamCallbacks();
     callParamCallbacks();
     return asyn_status;
+}
+
+asynStatus XeryonMotorAxis::update_params() {
+    asynStatus asyn_status = asynSuccess;
+
+    for (auto &[cmd, param_index] : pC_->cmd_param_map_) {
+	sprintf(pC_->outString_, "%s=?", cmd.c_str());
+	asyn_status = pC_->writeReadController();
+	if (asyn_status) {
+	    return asyn_status;
+	}
+	auto ret = parse_reply(pC_->inString_);
+	if (ret.has_value()) {
+	    pC_->setIntegerParam(param_index, ret.value());
+	}
+    }
+    return asyn_status;
+    // assume caller calls callParamCallbacks()
 }
 
 XeryonMotorAxis::XeryonMotorAxis(XeryonMotorController *pC, int axisNo)
@@ -168,7 +193,6 @@ asynStatus XeryonMotorAxis::stop(double acceleration) {
     asynStatus asyn_status = asynSuccess;
 
     sprintf(pC_->outString_, "STOP");
-    std::cout << "stop called" << std::endl;
     asyn_status = pC_->writeController();
 
     callParamCallbacks();
@@ -183,11 +207,18 @@ asynStatus XeryonMotorAxis::move(double position, int relative, double minVeloci
     const int velo = maxVelocity * DRIVER_RESOLUTION * 100;
     sprintf(pC_->outString_, "SSPD=%d", velo);
     asyn_status = pC_->writeController();
+    if (asyn_status) {
+	goto skip;
+    }
 
     // Move to this target position in closed loop
     sprintf(pC_->outString_, "DPOS=%d", static_cast<int>(position));
     asyn_status = pC_->writeController();
+    if (asyn_status) {
+	goto skip;
+    }
 
+skip:
     callParamCallbacks();
     return asyn_status;
 }
@@ -209,38 +240,6 @@ StatusBits get_status(int status) {
     return s;
 }
 
-asynStatus XeryonMotorAxis::update_params() {
-    asynStatus asyn_status = asynSuccess;
-    std::optional<int> freq1 = 0;
-    std::optional<int> freq2 = 0;
-
-    // Zone 1 frequency
-    sprintf(pC_->outString_, "FREQ=?");
-    asyn_status = pC_->writeReadController();
-    if (asyn_status) {
-        goto skip;
-    }
-    freq1 = parse_reply(pC_->inString_);
-    if (freq1.has_value()) {
-        pC_->setIntegerParam(pC_->frequency1Index_, freq1.value());
-    }
-
-    // Zone 2 frequency
-    sprintf(pC_->outString_, "FRQ2=?");
-    asyn_status = pC_->writeReadController();
-    if (asyn_status) {
-        goto skip;
-    }
-    freq2 = parse_reply(pC_->inString_);
-    if (freq1.has_value()) {
-        pC_->setIntegerParam(pC_->frequency2Index_, freq2.value());
-    }
-
-skip:
-    callParamCallbacks();
-    return asyn_status;
-}
-
 asynStatus XeryonMotorAxis::poll(bool *moving) {
     asynStatus asyn_status = asynSuccess;
 
@@ -258,6 +257,7 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     if (epos.has_value()) {
         int rbv = epos.value();
         if (rbv > 28800) {
+	    // keep readback in range -180, 180
             rbv = rbv - 57600;
         }
         setDoubleParam(pC_->motorPosition_, rbv);
@@ -272,6 +272,7 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     }
     stat = parse_reply(pC_->inString_);
     if (stat.has_value()) {
+	setIntegerParam(pC_->statusBitsIndex_, stat.value());
         status_bits = get_status(stat.value());
         setIntegerParam(pC_->motorStatusDone_, !status_bits.MotorOn);
         setIntegerParam(pC_->motorStatusMoving_, status_bits.MotorOn);
@@ -292,11 +293,18 @@ asynStatus XeryonMotorAxis::home(double minVelocity, double maxVelocity, double 
     const int velo = maxVelocity * DRIVER_RESOLUTION * 100; // 0.01 deg/sec
     sprintf(pC_->outString_, "ISPD=%d", velo);
     asyn_status = pC_->writeController();
+    if (asyn_status) {
+	goto skip;
+    }
 
     // find the index
     sprintf(pC_->outString_, "INDX=%d", static_cast<bool>(forwards) ? 1 : 0);
     asyn_status = pC_->writeController();
+    if (asyn_status) {
+	goto skip;
+    }
 
+skip:
     callParamCallbacks();
     return asyn_status;
 }

@@ -1,12 +1,19 @@
 #include "asynDriver.h"
 #include "asynMotorAxis.h"
 #include "asynMotorController.h"
-#include <charconv>
-#include <sstream>
+#include <unordered_map>
 
 static constexpr char READ_PARAMS_STRING[] = "READ_PARAMS";
 static constexpr char FREQUENCY1_STRING[] = "FREQUENCY1";
 static constexpr char FREQUENCY2_STRING[] = "FREQUENCY2";
+static constexpr char CONTROL_FREQUENCY_STRING[] = "CONTROL_FREQUENCY";
+static constexpr char POS_TOLERANCE_STRING[] = "POSITION_TOLERANCE";
+static constexpr char POS_TOLERANCE2_STRING[] = "POSITION_TOLERANCE2";
+static constexpr char CONTROL_TIMEOUT_STRING[] = "CONTROL_TIMEOUT";
+static constexpr char CONTROL_TIMEOUT2_STRING[] = "CONTROL_TIMEOUT2";
+static constexpr char ZONE1_STRING[] = "ZONE1";
+static constexpr char ZONE2_STRING[] = "ZONE2";
+static constexpr char STATUS_BITS_STRING[] = "STATUS_BITS";
 
 struct StatusBits {
     bool AmplifiersEnabled;
@@ -26,13 +33,13 @@ struct StatusBits {
 class epicsShareClass XeryonMotorAxis : public asynMotorAxis {
   public:
     XeryonMotorAxis(class XeryonMotorController *pC, int axisNo);
-    void report(FILE *fp, int level);
-    asynStatus stop(double acceleration);
-    asynStatus poll(bool *moving);
-    asynStatus setClosedLoop(bool closedLoop);
-    asynStatus home(double minVelocity, double maxVelocity, double acceleration, int forwards);
+    void report(FILE *fp, int level) override;
+    asynStatus stop(double acceleration) override;
+    asynStatus poll(bool *moving) override;
+    asynStatus setClosedLoop(bool closedLoop) override;
+    asynStatus home(double minVelocity, double maxVelocity, double acceleration, int forwards) override;
     asynStatus move(double position, int relative, double minVelocity, double maxVelocity,
-                    double acceleration);
+                    double acceleration) override;
 
     asynStatus update_params();
 
@@ -68,10 +75,23 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
 
     asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
 
+  private:
+    // Map of extra controller commands we expose through asyn parameters.
+    // Must be defined after calling createParam
+    std::unordered_map<std::string, int> cmd_param_map_;
+
   protected:
     int readParamsIndex_;
     int frequency1Index_;
     int frequency2Index_;
+    int controlFreqIndex_;
+    int posToleranceIndex_;
+    int posTolerance2Index_;
+    int controlTimeoutIndex_;
+    int controlTimeout2Index_;
+    int statusBitsIndex_;
+    int zone1Index_;
+    int zone2Index_;
 
     friend class XeryonMotorAxis;
 };
