@@ -14,6 +14,11 @@ static constexpr char CONTROL_TIMEOUT2_STRING[] = "CONTROL_TIMEOUT2";
 static constexpr char ZONE1_STRING[] = "ZONE1";
 static constexpr char ZONE2_STRING[] = "ZONE2";
 static constexpr char STATUS_BITS_STRING[] = "STATUS_BITS";
+static constexpr char PHASE_CORRECTION_STRING[] = "PHASE_CORRECTION";
+static constexpr char OPEN_LOOP_AMPLITUDE_STRING[] = "OPEN_LOOP_AMPLITUDE";
+static constexpr char OPEN_LOOP_PHASE_OFFSET_STRING[] = "OPEN_LOOP_PHASE_OFFSET";
+static constexpr char OPEN_LOOP_JOG_STRING[] = "OPEN_LOOP_JOG";
+static constexpr char SCAN_JOG_STRING[] = "SCAN_JOG";
 
 struct StatusBits {
     bool AmplifiersEnabled;
@@ -81,6 +86,7 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
     std::unordered_map<int, std::string> cmd_param_map_;
 
   protected:
+    static constexpr int NUM_PARAMS = 16;
     int readParamsIndex_;
     int frequency1Index_;
     int frequency2Index_;
@@ -92,6 +98,11 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
     int statusBitsIndex_;
     int zone1Index_;
     int zone2Index_;
+    int phaseCorrectionIndex_;
+    int openLoopAmplIndex_;
+    int openLoopPhaseOffsetIndex_;
+    int openLoopJogIndex_;
+    int scanJogIndex_;
 
     friend class XeryonMotorAxis;
 };

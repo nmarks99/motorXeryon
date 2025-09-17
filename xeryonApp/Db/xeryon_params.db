@@ -4,22 +4,10 @@ record(bo, "$(P)$(M):ReadParams") {
     field(SCAN, "$(SCAN=Passive)")
 }
 
-record(ai, "$(P)$(M):StatusBits") {
+record(longin, "$(P)$(M):StatusBits") {
     field(DTYP, "asynInt32")
     field(SCAN, "I/O Intr")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))STATUS_BITS")
-    # field(ZRST, "Amplifiers enabled")
-    # field(ONST, "End stop")
-    # field(TWST, "Thermal protection 1")
-    # field(THST, "Thermal protection 2")
-    # field(FRST, "Force zero")
-    # field(FVST, "Motor on")
-    # field(SXST, "Closed loop")
-    # field(SVST, "Encoder at index")
-    # field(EIST, "Encoder valid")
-    # field(NIST, "Searching index")
-    # field(TEST, "Position reached")
-    # field(ELST, "Error compensation")
 }
 
 record(longout, "$(P)$(M):Zone1") {
@@ -140,4 +128,44 @@ record(longin, "$(P)$(M):PosTolerance2RBV") {
     field(EGU, "counts")
     field(SCAN, "I/O Intr")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))POSITION_TOLERANCE2")
+}
+
+record(longout, "$(P)$(M):PhaseCorrection") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))PHASE_CORRECTION")
+}
+record(longin, "$(P)$(M):PhaseCorrectionRBV") {
+    field(DTYP, "asynInt32")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))PHASE_CORRECTION")
+}
+
+record(longout, "$(P)$(M):OpenLoopAmplitude") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))OPEN_LOOP_AMPLITUDE")
+}
+record(longin, "$(P)$(M):OpenLoopAmplitudeRBV") {
+    field(DTYP, "asynInt32")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))OPEN_LOOP_AMPLITUDE")
+}
+
+record(longout, "$(P)$(M):OpenLoopPhaseOffset") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))OPEN_LOOP_PHASE_OFFSET")
+}
+record(longin, "$(P)$(M):OpenLoopPhaseOffsetRBV") {
+    field(DTYP, "asynInt32")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))OPEN_LOOP_PHASE_OFFSET")
+}
+
+record(bo, "$(P)$(M):OpenLoopJog") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))OPEN_LOOP_JOG")
+}
+
+record(bo, "$(P)$(M):ScanJog") {
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT=1))SCAN_JOG")
 }

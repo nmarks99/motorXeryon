@@ -4,15 +4,13 @@
 #include <epicsExport.h>
 #include <epicsThread.h>
 #include <iocsh.h>
-#include <iostream>
 #include <optional>
 
 #include "xeryon_driver.hpp"
 
 constexpr double DRIVER_RESOLUTION = 0.00625; // deg/count
-constexpr int NUM_PARAMS = 6;
 
-// Parse reply from commands sent from the controller
+// Parse reply from commands sent by the controller
 // E.g. send "EPOS=?", receive "EPOS=1000".
 // parse_reply("EPOS=1000") returns 1000 as an optional<int>
 std::optional<int> parse_reply(const std::string &str) {
@@ -51,19 +49,20 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     createParam(STATUS_BITS_STRING, asynParamInt32, &statusBitsIndex_);
     createParam(ZONE1_STRING, asynParamInt32, &zone1Index_);
     createParam(ZONE2_STRING, asynParamInt32, &zone2Index_);
+    createParam(PHASE_CORRECTION_STRING, asynParamInt32, &phaseCorrectionIndex_);
+    createParam(OPEN_LOOP_JOG_STRING, asynParamInt32, &openLoopJogIndex_);
+    createParam(OPEN_LOOP_AMPLITUDE_STRING, asynParamInt32, &openLoopAmplIndex_);
+    createParam(OPEN_LOOP_PHASE_OFFSET_STRING, asynParamInt32, &openLoopPhaseOffsetIndex_);
+    createParam(SCAN_JOG_STRING, asynParamInt32, &scanJogIndex_);
 
     // Map controller command strings to the associated asyn parameter index
-    cmd_param_map_ = std::unordered_map<int, std::string> {
-	{frequency1Index_, "FREQ"},
-	{frequency2Index_, "FRQ2"},
-	{zone1Index_, "ZON1"},
-	{zone2Index_, "ZON2"},
-	{controlFreqIndex_, "CFRQ"},
-	{posToleranceIndex_, "PTOL"},
-	{posTolerance2Index_, "PTO2"},
-	{controlTimeoutIndex_, "TOUT"},
-	{controlTimeout2Index_, "TOU2"},
-    };
+    cmd_param_map_ = std::unordered_map<int, std::string>{
+        {frequency1Index_, "FREQ"},      {frequency2Index_, "FRQ2"},
+        {zone1Index_, "ZON1"},           {zone2Index_, "ZON2"},
+        {controlFreqIndex_, "CFRQ"},     {posToleranceIndex_, "PTOL"},
+        {posTolerance2Index_, "PTO2"},   {controlTimeoutIndex_, "TOUT"},
+        {phaseCorrectionIndex_, "PHAC"}, {controlTimeout2Index_, "TOU2"},
+        {openLoopAmplIndex_, "AMPL"},    {openLoopPhaseOffsetIndex_, "PHAS"}};
 
     // Connect to motor controller
     status = pasynOctetSyncIO->connect(XeryonMotorPortName, 0, &pasynUserController_, NULL);
@@ -100,8 +99,8 @@ void XeryonMotorController::report(FILE *fp, int level) {
     // "dbior" from iocsh can be useful to see what's going on here
     fprintf(fp, "Xeryon Motor Controller driver %s\n", this->portName);
     fprintf(fp, "    numAxes=%d\n", numAxes_);
-    fprintf(fp, "    moving poll period=%f\n", movingPollPeriod_);
-    fprintf(fp, "    idle poll period=%f\n", idlePollPeriod_);
+    fprintf(fp, "    moving poll period=%f sec\n", movingPollPeriod_);
+    fprintf(fp, "    idle poll period=%f sec\n", idlePollPeriod_);
 
     // Call the base class method
     asynMotorController::report(fp, level);
@@ -128,20 +127,22 @@ asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 val
 
     if (function == readParamsIndex_) {
         asyn_status = pAxis->update_params();
-        if (asyn_status) {
-            goto skip;
-        }
+    } else if (function == openLoopJogIndex_) {
+        sprintf(outString_, "MOVE=%d", value == 1 ? 1 : -1);
+	asyn_status = writeController();
+    } else if (function == scanJogIndex_) {
+        sprintf(outString_, "SCAN=%d", value == 1 ? 1 : -1);
+	asyn_status = writeController();
     } else if (cmd_param_map_.count(function)) {
-	for (const auto &[param_index, cmd] : cmd_param_map_) {
-	    if (function == param_index) {
-		// TODO: this should send an axis specific command
-		sprintf(outString_, "%s=%d", cmd.c_str(), value);
-		asyn_status = this->writeController();
-		if (asyn_status) {
-		    goto skip;
-		}
-	    }
-	}
+        for (const auto &[param_index, cmd] : cmd_param_map_) {
+            if (function == param_index) {
+                sprintf(outString_, "%s=%d", cmd.c_str(), value);
+                asyn_status = this->writeController();
+                if (asyn_status) {
+                    goto skip;
+                }
+            }
+        }
     } else {
         asyn_status = asynMotorController::writeInt32(pasynUser, value);
     }
@@ -156,18 +157,18 @@ asynStatus XeryonMotorAxis::update_params() {
     asynStatus asyn_status = asynSuccess;
 
     for (auto &[param_index, cmd] : pC_->cmd_param_map_) {
-	sprintf(pC_->outString_, "%s=?", cmd.c_str());
-	asyn_status = pC_->writeReadController();
-	if (asyn_status) {
-	    return asyn_status;
-	}
-	auto ret = parse_reply(pC_->inString_);
-	if (ret.has_value()) {
-	    pC_->setIntegerParam(param_index, ret.value());
-	}
+        sprintf(pC_->outString_, "%s=?", cmd.c_str());
+        asyn_status = pC_->writeReadController();
+        if (asyn_status) {
+            return asyn_status;
+        }
+        auto ret = parse_reply(pC_->inString_);
+        if (ret.has_value()) {
+            pC_->setIntegerParam(param_index, ret.value());
+        }
     }
-    return asyn_status;
     // assume caller calls callParamCallbacks()
+    return asyn_status;
 }
 
 XeryonMotorAxis::XeryonMotorAxis(XeryonMotorController *pC, int axisNo)
@@ -211,14 +212,14 @@ asynStatus XeryonMotorAxis::move(double position, int relative, double minVeloci
     sprintf(pC_->outString_, "SSPD=%d", velo);
     asyn_status = pC_->writeController();
     if (asyn_status) {
-	goto skip;
+        goto skip;
     }
 
     // Move to this target position in closed loop
     sprintf(pC_->outString_, "DPOS=%d", static_cast<int>(position));
     asyn_status = pC_->writeController();
     if (asyn_status) {
-	goto skip;
+        goto skip;
     }
 
 skip:
@@ -260,7 +261,7 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     if (epos.has_value()) {
         int rbv = epos.value();
         if (rbv > 28800) {
-	    // keep readback in range -180, 180
+            // keep readback in range -180, 180
             rbv = rbv - 57600;
         }
         setDoubleParam(pC_->motorPosition_, rbv);
@@ -275,7 +276,7 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     }
     stat = parse_reply(pC_->inString_);
     if (stat.has_value()) {
-	setIntegerParam(pC_->statusBitsIndex_, stat.value());
+        setIntegerParam(pC_->statusBitsIndex_, stat.value());
         status_bits = get_status(stat.value());
         setIntegerParam(pC_->motorStatusDone_, !status_bits.MotorOn);
         setIntegerParam(pC_->motorStatusMoving_, status_bits.MotorOn);
@@ -297,14 +298,14 @@ asynStatus XeryonMotorAxis::home(double minVelocity, double maxVelocity, double 
     sprintf(pC_->outString_, "ISPD=%d", velo);
     asyn_status = pC_->writeController();
     if (asyn_status) {
-	goto skip;
+        goto skip;
     }
 
     // find the index
     sprintf(pC_->outString_, "INDX=%d", static_cast<bool>(forwards) ? 1 : 0);
     asyn_status = pC_->writeController();
     if (asyn_status) {
-	goto skip;
+        goto skip;
     }
 
 skip:

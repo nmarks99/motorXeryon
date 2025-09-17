@@ -3,13 +3,13 @@
 file "$(MOTOR)/db/asyn_motor.db"
 {
 pattern
-{N,   M,       DTYP,         PORT,    ADDR,  DESC,          EGU,  DIR,  VELO,  VBAS,  ACCL,  BDST,  BVEL,  BACC,      MRES,  PREC, DHLM,  DLLM, RTRY, INIT}
-{1,  "m$(N)",  "asynMotor",  XERYON_1,    0,  "motor $(N)",  deg,  Pos,     50,   .1,     .2,     0,     1,    .2,  0.00625,   5,  1000,  -1000,    0,   ""}
+{N,   M,       DTYP,         PORT,    ADDR,  DESC,          EGU,  DIR,  VELO,  VBAS,  ACCL,  BDST,  BVEL,  BACC,     MRES,  PREC,  DHLM,  DLLM, RTRY, RSTM,  INIT}
+{1,  "m$(N)",  "asynMotor",  XERYON_1,   0,  "motor $(N)",  deg,  Pos,     50,   1,   0.2,     0,     1,   0.2,  0.00625,     3,  1000, -1000,    0, "Never", ""}
 }
 
 file "$(MOTOR_XERYON)/db/xeryon_params.db"
 {
 pattern
 {M,    ADDR,  PORT,        SCAN}
-{"m1",    0,  "XERYON_1",  "1 second"}
+{"m1",    0,  "XERYON_1",  ".5 second"}
 }
