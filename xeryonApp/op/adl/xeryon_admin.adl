@@ -1,6 +1,6 @@
 
 file {
-	name="/home/beams0/NMARKS/devel/motorXeryon/xeryonApp/op/adl/xeryon_params.adl"
+	name="/home/beams0/NMARKS/devel/motorXeryon/xeryonApp/op/adl/xeryon_admin.adl"
 	version=030111
 }
 display {
