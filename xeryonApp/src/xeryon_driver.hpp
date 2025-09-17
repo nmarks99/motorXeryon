@@ -78,7 +78,7 @@ class epicsShareClass XeryonMotorController : public asynMotorController {
   private:
     // Map of extra controller commands we expose through asyn parameters.
     // Must be defined after calling createParam
-    std::unordered_map<std::string, int> cmd_param_map_;
+    std::unordered_map<int, std::string> cmd_param_map_;
 
   protected:
     int readParamsIndex_;

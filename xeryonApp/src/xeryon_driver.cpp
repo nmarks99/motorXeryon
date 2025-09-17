@@ -53,16 +53,16 @@ XeryonMotorController::XeryonMotorController(const char *portName, const char *X
     createParam(ZONE2_STRING, asynParamInt32, &zone2Index_);
 
     // Map controller command strings to the associated asyn parameter index
-    cmd_param_map_ = std::unordered_map<std::string, int> {
-	{"FREQ", frequency1Index_},
-	{"FRQ2", frequency2Index_},
-	{"CFRQ", controlFreqIndex_},
-	{"PTOL", posToleranceIndex_},
-	{"PTO2", posTolerance2Index_},
-	{"TOUT", controlTimeoutIndex_},
-	{"TOU2", controlTimeout2Index_},
-	{"ZON1", zone1Index_},
-	{"ZON2", zone2Index_},
+    cmd_param_map_ = std::unordered_map<int, std::string> {
+	{frequency1Index_, "FREQ"},
+	{frequency2Index_, "FRQ2"},
+	{zone1Index_, "ZON1"},
+	{zone2Index_, "ZON2"},
+	{controlFreqIndex_, "CFRQ"},
+	{posToleranceIndex_, "PTOL"},
+	{posTolerance2Index_, "PTO2"},
+	{controlTimeoutIndex_, "TOUT"},
+	{controlTimeout2Index_, "TOU2"},
     };
 
     // Connect to motor controller
@@ -131,9 +131,10 @@ asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 val
         if (asyn_status) {
             goto skip;
         }
-    } else {
-	for (const auto &[cmd, param_index] : cmd_param_map_) {
+    } else if (cmd_param_map_.count(function)) {
+	for (const auto &[param_index, cmd] : cmd_param_map_) {
 	    if (function == param_index) {
+		// TODO: this should send an axis specific command
 		sprintf(outString_, "%s=%d", cmd.c_str(), value);
 		asyn_status = this->writeController();
 		if (asyn_status) {
@@ -141,6 +142,8 @@ asynStatus XeryonMotorController::writeInt32(asynUser *pasynUser, epicsInt32 val
 		}
 	    }
 	}
+    } else {
+        asyn_status = asynMotorController::writeInt32(pasynUser, value);
     }
 
 skip:
@@ -152,7 +155,7 @@ skip:
 asynStatus XeryonMotorAxis::update_params() {
     asynStatus asyn_status = asynSuccess;
 
-    for (auto &[cmd, param_index] : pC_->cmd_param_map_) {
+    for (auto &[param_index, cmd] : pC_->cmd_param_map_) {
 	sprintf(pC_->outString_, "%s=?", cmd.c_str());
 	asyn_status = pC_->writeReadController();
 	if (asyn_status) {
