@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+CAQTDM_BIN="/APSshare/bin/caQtDM"
+SCRIPT_DIR=`dirname ${BASH_SOURCE:-$0}`
+MOTOR_UI_DIRS="/APSshare/epics/synApps_6_3/support/motor-R7-3-1/motorApp/op/ui/:/APSshare/epics/synApps_6_3/support/motor-R7-3-1/motorApp/op/ui/autoconvert/"
+export CAQTDM_DISPLAY_PATH="${SCRIPT_DIR}/../../xeryonApp/op/ui/autoconvert/:${MOTOR_UI_DIRS}"
+
+${CAQTDM_BIN} -macro "P=xeryonExample:,M=m1" xeryon_admin.ui

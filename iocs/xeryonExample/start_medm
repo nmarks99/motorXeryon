@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+MEDM_BIN="/APSshare/epics/extensions/bin/linux-x86_64/medm"
+SCRIPT_DIR=`dirname ${BASH_SOURCE:-$0}`
+MOTOR_ADL_DIRS="/APSshare/epics/synApps_6_3/support/motor-R7-3-1/motorApp/op/adl/"
+export EPICS_DISPLAY_PATH="${SCRIPT_DIR}/../../xeryonApp/op/adl/:${MOTOR_ADL_DIRS}"
+
+${MEDM_BIN} -macro "P=xeryonExample:,M=m1" -x xeryon_admin.adl

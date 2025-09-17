@@ -4,8 +4,8 @@
 <widget class="QMainWindow" name="MainWindow">
     <property name="geometry">
         <rect>
-            <x>242</x>
-            <y>603</y>
+            <x>232</x>
+            <y>595</y>
             <width>1000</width>
             <height>942</height>
         </rect>
@@ -2848,7 +2848,7 @@ caMenu{
                 <rect>
                     <x>90</x>
                     <y>730</y>
-                    <width>100</width>
+                    <width>80</width>
                     <height>20</height>
                 </rect>
             </property>
@@ -2872,9 +2872,6 @@ caMenu{
                     <blue>187</blue>
                 </color>
             </property>
-            <property name="alignment">
-                <set>Qt::AlignAbsolute|Qt::AlignHCenter|Qt::AlignVCenter</set>
-            </property>
             <property name="limitsMode">
                 <enum>caLineEdit::Channel</enum>
             </property>
@@ -2890,6 +2887,9 @@ caMenu{
             <property name="maxValue">
                 <double>1.0</double>
             </property>
+            <property name="alignment">
+                <set>Qt::AlignAbsolute|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
             <property name="formatType">
                 <enum>decimal</enum>
             </property>
@@ -2900,7 +2900,7 @@ caMenu{
         <widget class="caLineEdit" name="caLineEdit_18">
             <property name="geometry">
                 <rect>
-                    <x>200</x>
+                    <x>175</x>
                     <y>730</y>
                     <width>50</width>
                     <height>20</height>
@@ -2926,9 +2926,6 @@ caMenu{
                     <blue>187</blue>
                 </color>
             </property>
-            <property name="alignment">
-                <set>Qt::AlignAbsolute|Qt::AlignHCenter|Qt::AlignVCenter</set>
-            </property>
             <property name="limitsMode">
                 <enum>caLineEdit::Channel</enum>
             </property>
@@ -2943,6 +2940,9 @@ caMenu{
             </property>
             <property name="maxValue">
                 <double>1.0</double>
+            </property>
+            <property name="alignment">
+                <set>Qt::AlignAbsolute|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
             <property name="formatType">
                 <enum>decimal</enum>
@@ -4520,7 +4520,61 @@ caMenu{
         <widget class="caLineEdit" name="caLineEdit_22">
             <property name="geometry">
                 <rect>
-                    <x>200</x>
+                    <x>90</x>
+                    <y>595</y>
+                    <width>80</width>
+                    <height>20</height>
+                </rect>
+            </property>
+            <property name="fontScaleMode">
+                <enum>caLineEdit::WidthAndHeight</enum>
+            </property>
+            <property name="channel">
+                <string>$(P)$(M).RBV</string>
+            </property>
+            <property name="foreground">
+                <color alpha="255">
+                    <red>10</red>
+                    <green>0</green>
+                    <blue>184</blue>
+                </color>
+            </property>
+            <property name="background">
+                <color alpha="255">
+                    <red>187</red>
+                    <green>187</green>
+                    <blue>187</blue>
+                </color>
+            </property>
+            <property name="limitsMode">
+                <enum>caLineEdit::Channel</enum>
+            </property>
+            <property name="limitsMode">
+                <enum>caLineEdit::Channel</enum>
+            </property>
+            <property name="precisionMode">
+                <enum>caLineEdit::Channel</enum>
+            </property>
+            <property name="minValue">
+                <double>0.0</double>
+            </property>
+            <property name="maxValue">
+                <double>1.0</double>
+            </property>
+            <property name="alignment">
+                <set>Qt::AlignAbsolute|Qt::AlignLeft|Qt::AlignVCenter</set>
+            </property>
+            <property name="formatType">
+                <enum>decimal</enum>
+            </property>
+            <property name="colorMode">
+                <enum>caLineEdit::Static</enum>
+            </property>
+        </widget>
+        <widget class="caLineEdit" name="caLineEdit_23">
+            <property name="geometry">
+                <rect>
+                    <x>175</x>
                     <y>595</y>
                     <width>50</width>
                     <height>20</height>
@@ -4546,9 +4600,6 @@ caMenu{
                     <blue>187</blue>
                 </color>
             </property>
-            <property name="alignment">
-                <set>Qt::AlignAbsolute|Qt::AlignHCenter|Qt::AlignVCenter</set>
-            </property>
             <property name="limitsMode">
                 <enum>caLineEdit::Channel</enum>
             </property>
@@ -4564,59 +4615,8 @@ caMenu{
             <property name="maxValue">
                 <double>1.0</double>
             </property>
-            <property name="formatType">
-                <enum>decimal</enum>
-            </property>
-            <property name="colorMode">
-                <enum>caLineEdit::Static</enum>
-            </property>
-        </widget>
-        <widget class="caLineEdit" name="caLineEdit_23">
-            <property name="geometry">
-                <rect>
-                    <x>90</x>
-                    <y>595</y>
-                    <width>100</width>
-                    <height>20</height>
-                </rect>
-            </property>
-            <property name="fontScaleMode">
-                <enum>caLineEdit::WidthAndHeight</enum>
-            </property>
-            <property name="channel">
-                <string>$(P)$(M).RBV</string>
-            </property>
-            <property name="foreground">
-                <color alpha="255">
-                    <red>10</red>
-                    <green>0</green>
-                    <blue>184</blue>
-                </color>
-            </property>
-            <property name="background">
-                <color alpha="255">
-                    <red>187</red>
-                    <green>187</green>
-                    <blue>187</blue>
-                </color>
-            </property>
             <property name="alignment">
-                <set>Qt::AlignAbsolute|Qt::AlignHCenter|Qt::AlignVCenter</set>
-            </property>
-            <property name="limitsMode">
-                <enum>caLineEdit::Channel</enum>
-            </property>
-            <property name="limitsMode">
-                <enum>caLineEdit::Channel</enum>
-            </property>
-            <property name="precisionMode">
-                <enum>caLineEdit::Channel</enum>
-            </property>
-            <property name="minValue">
-                <double>0.0</double>
-            </property>
-            <property name="maxValue">
-                <double>1.0</double>
+                <set>Qt::AlignAbsolute|Qt::AlignLeft|Qt::AlignVCenter</set>
             </property>
             <property name="formatType">
                 <enum>decimal</enum>

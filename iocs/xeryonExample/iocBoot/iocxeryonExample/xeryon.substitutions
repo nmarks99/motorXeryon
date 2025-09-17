@@ -1,10 +1,8 @@
-# Encoder is 57600 counts/rev
-# (57600counts/rev) * (1rev/360deg) = 160counts/deg -> 0.00625deg/count
 file "$(MOTOR)/db/asyn_motor.db"
 {
 pattern
-{N,   M,       DTYP,         PORT,    ADDR,  DESC,          EGU,  DIR,  VELO,  VBAS,  ACCL,  BDST,  BVEL,  BACC,     MRES,  PREC,  DHLM,  DLLM, RTRY, RSTM,  INIT}
-{1,  "m$(N)",  "asynMotor",  XERYON_1,   0,  "motor $(N)",  deg,  Pos,     50,   1,   0.2,     0,     1,   0.2,  0.00625,     3,  1000, -1000,    0, "Never", ""}
+{N,   M,       DTYP,         PORT,    ADDR,  DESC,            EGU,  DIR,  VELO,  VBAS,  ACCL,  BDST,  BVEL,  BACC,     MRES,  PREC,  DHLM,  DLLM, RTRY, RSTM,  INIT}
+{1,  "m$(N)",  "asynMotor",  XERYON_1,   0,  "XRTA Rotation", deg,  Pos,     50,   1,   0.2,     0,     1,   0.2,   0.00625,     3,  1000, -1000,    0, "Never", ""}
 }
 
 file "$(MOTOR_XERYON)/db/xeryon_params.db"
