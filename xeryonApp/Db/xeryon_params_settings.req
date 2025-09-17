@@ -1,0 +1,12 @@
+$(P)$(M):Zone1.VAL
+$(P)$(M):Zone2.VAL
+$(P)$(M):Freq1.VAL
+$(P)$(M):Freq2.VAL
+$(P)$(M):ControlFreq.VAL
+$(P)$(M):ControlTimeout.VAL
+$(P)$(M):ControlTimeout2.VAL
+$(P)$(M):PosTolerance.VAL
+$(P)$(M):PosTolerance2.VAL
+$(P)$(M):PhaseCorrection.VAL
+$(P)$(M):OpenLoopAmplitude.VAL
+$(P)$(M):OpenLoopPhaseOffset.VAL

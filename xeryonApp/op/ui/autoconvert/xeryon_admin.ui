@@ -4,9 +4,9 @@
 <widget class="QMainWindow" name="MainWindow">
     <property name="geometry">
         <rect>
-            <x>232</x>
-            <y>595</y>
-            <width>1000</width>
+            <x>222</x>
+            <y>587</y>
+            <width>1001</width>
             <height>942</height>
         </rect>
     </property>
@@ -1509,7 +1509,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>685</x>
-                    <y>100</y>
+                    <y>120</y>
                     <width>30</width>
                     <height>410</height>
                 </rect>
@@ -1577,7 +1577,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>105</y>
+                    <y>125</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1613,7 +1613,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>140</y>
+                    <y>160</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1649,7 +1649,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>175</y>
+                    <y>195</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1685,7 +1685,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>205</y>
+                    <y>225</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1721,7 +1721,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>240</y>
+                    <y>260</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1757,7 +1757,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>275</y>
+                    <y>295</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1793,7 +1793,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>310</y>
+                    <y>330</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1829,7 +1829,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>345</y>
+                    <y>365</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1865,7 +1865,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>415</y>
+                    <y>435</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1901,7 +1901,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>380</y>
+                    <y>400</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1937,7 +1937,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>450</y>
+                    <y>470</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -1973,7 +1973,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>720</x>
-                    <y>485</y>
+                    <y>505</y>
                     <width>250</width>
                     <height>25</height>
                 </rect>
@@ -2186,7 +2186,7 @@ caMenu{
             <property name="geometry">
                 <rect>
                     <x>685</x>
-                    <y>55</y>
+                    <y>75</y>
                     <width>200</width>
                     <height>30</height>
                 </rect>
@@ -4625,6 +4625,48 @@ caMenu{
                 <enum>caLineEdit::Static</enum>
             </property>
         </widget>
+        <widget class="caRelatedDisplay" name="caRelatedDisplay_1">
+            <property name="geometry">
+                <rect>
+                    <x>920</x>
+                    <y>45</y>
+                    <width>75</width>
+                    <height>25</height>
+                </rect>
+            </property>
+            <property name="foreground">
+                <color alpha="255">
+                    <red>255</red>
+                    <green>255</green>
+                    <blue>255</blue>
+                </color>
+            </property>
+            <property name="background">
+                <color alpha="255">
+                    <red>33</red>
+                    <green>108</green>
+                    <blue>0</blue>
+                </color>
+            </property>
+            <property name="label">
+                <string>asyn</string>
+            </property>
+            <property name="stackingMode">
+                <enum>Menu</enum>
+            </property>
+            <property name="labels">
+                <string>asynOctet</string>
+            </property>
+            <property name="files">
+                <string>asynOctet.adl</string>
+            </property>
+            <property name="args">
+                <string>P=$(P),R=$(R)</string>
+            </property>
+            <property name="removeParent">
+                <string>false</string>
+            </property>
+        </widget>
         <zorder>caLabel_0</zorder>
         <zorder>caLabel_1</zorder>
         <zorder>caLabel_2</zorder>
@@ -4729,6 +4771,7 @@ caMenu{
         <zorder>caMessageButton_8</zorder>
         <zorder>caLineEdit_22</zorder>
         <zorder>caLineEdit_23</zorder>
+        <zorder>caRelatedDisplay_1</zorder>
     </widget>
 </widget>
 </ui>

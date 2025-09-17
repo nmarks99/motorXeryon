@@ -5,9 +5,9 @@ file {
 }
 display {
 	object {
-		x=232
-		y=595
-		width=1000
+		x=222
+		y=587
+		width=1001
 		height=942
 	}
 	clr=14
@@ -514,7 +514,7 @@ text {
 byte {
 	object {
 		x=685
-		y=100
+		y=120
 		width=30
 		height=410
 	}
@@ -530,7 +530,7 @@ byte {
 text {
 	object {
 		x=720
-		y=105
+		y=125
 		width=250
 		height=25
 	}
@@ -542,7 +542,7 @@ text {
 text {
 	object {
 		x=720
-		y=140
+		y=160
 		width=250
 		height=25
 	}
@@ -554,7 +554,7 @@ text {
 text {
 	object {
 		x=720
-		y=175
+		y=195
 		width=250
 		height=25
 	}
@@ -566,7 +566,7 @@ text {
 text {
 	object {
 		x=720
-		y=205
+		y=225
 		width=250
 		height=25
 	}
@@ -578,7 +578,7 @@ text {
 text {
 	object {
 		x=720
-		y=240
+		y=260
 		width=250
 		height=25
 	}
@@ -590,7 +590,7 @@ text {
 text {
 	object {
 		x=720
-		y=275
+		y=295
 		width=250
 		height=25
 	}
@@ -602,7 +602,7 @@ text {
 text {
 	object {
 		x=720
-		y=310
+		y=330
 		width=250
 		height=25
 	}
@@ -614,7 +614,7 @@ text {
 text {
 	object {
 		x=720
-		y=345
+		y=365
 		width=250
 		height=25
 	}
@@ -626,7 +626,7 @@ text {
 text {
 	object {
 		x=720
-		y=415
+		y=435
 		width=250
 		height=25
 	}
@@ -638,7 +638,7 @@ text {
 text {
 	object {
 		x=720
-		y=380
+		y=400
 		width=250
 		height=25
 	}
@@ -650,7 +650,7 @@ text {
 text {
 	object {
 		x=720
-		y=450
+		y=470
 		width=250
 		height=25
 	}
@@ -662,7 +662,7 @@ text {
 text {
 	object {
 		x=720
-		y=485
+		y=505
 		width=250
 		height=25
 	}
@@ -736,7 +736,7 @@ text {
 text {
 	object {
 		x=685
-		y=55
+		y=75
 		width=200
 		height=30
 	}
@@ -1631,4 +1631,20 @@ text {
 	}
 	limits {
 	}
+}
+"related display" {
+	object {
+		x=920
+		y=45
+		width=75
+		height=25
+	}
+	display[0] {
+		label="asynOctet"
+		name="asynOctet.adl"
+		args="P=$(P),R=$(R)"
+	}
+	clr=0
+	bclr=19
+	label="asyn"
 }

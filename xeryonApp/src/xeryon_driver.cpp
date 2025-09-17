@@ -8,6 +8,7 @@
 
 #include "xeryon_driver.hpp"
 
+constexpr int ENCODER_COUNT_MAX = 57600;
 constexpr double DRIVER_RESOLUTION = 0.00625; // deg/count
 
 // Parse reply from commands sent by the controller
@@ -260,9 +261,9 @@ asynStatus XeryonMotorAxis::poll(bool *moving) {
     epos = parse_reply(pC_->inString_);
     if (epos.has_value()) {
         int rbv = epos.value();
-        if (rbv > 28800) {
+        if (rbv > ENCODER_COUNT_MAX/2) {
             // keep readback in range -180, 180
-            rbv = rbv - 57600;
+            rbv = rbv - ENCODER_COUNT_MAX;
         }
         setDoubleParam(pC_->motorPosition_, rbv);
         setDoubleParam(pC_->motorEncoderPosition_, rbv);
