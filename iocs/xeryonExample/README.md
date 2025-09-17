@@ -1,6 +1,7 @@
-# motorXeryon
-EPICS motor support for Xeryon Precision controllers.
+# Example IOC for motorXeryon
 
-The XD-C controller with the XRTA rotation stage is the only controller/stage combination
-that is currently supported. Other single axis systems should work if
-the stage type is adjusted. Multi-axis systems are not yet supported by this driver.
+A minimal example IOC which uses the motorXeryon support.
+The `start_caqtm` and `start_medm` scripts can be used to
+start the provided GUIs. Paths to the display managers and `CAQTDM/EPICS_DISPLAY_PATH`
+may need to be corrected.
+
