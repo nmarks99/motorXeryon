@@ -3,6 +3,7 @@
 #include "asynMotorController.h"
 #include <unordered_map>
 
+// String names for parameters in asyn parameter library
 static constexpr char READ_PARAMS_STRING[] = "READ_PARAMS";
 static constexpr char FREQUENCY1_STRING[] = "FREQUENCY1";
 static constexpr char FREQUENCY2_STRING[] = "FREQUENCY2";
@@ -20,6 +21,7 @@ static constexpr char OPEN_LOOP_PHASE_OFFSET_STRING[] = "OPEN_LOOP_PHASE_OFFSET"
 static constexpr char OPEN_LOOP_JOG_STRING[] = "OPEN_LOOP_JOG";
 static constexpr char SCAN_JOG_STRING[] = "SCAN_JOG";
 
+// Convenience struct to store status bits from controller
 struct StatusBits {
     bool AmplifiersEnabled;
     bool EndStop;
@@ -46,6 +48,8 @@ class epicsShareClass XeryonMotorAxis : public asynMotorAxis {
     asynStatus move(double position, int relative, double minVelocity, double maxVelocity,
                     double acceleration) override;
 
+    // Gets the latest values from the controller and updates the values
+    // in the parameter library
     asynStatus update_params();
 
   private:
@@ -56,29 +60,12 @@ class epicsShareClass XeryonMotorAxis : public asynMotorAxis {
 
 class epicsShareClass XeryonMotorController : public asynMotorController {
   public:
-    /// \brief Create a new XeryonMotorController object
-    ///
-    /// \param[in] portName             The name of the asyn port that will be created for this
-    /// driver
-    /// \param[in] XeryonPortName        The name of the drvAsynIPPort that was created previously
-    /// \param[in] numAxes              The number of axes that this controller supports
-    /// \param[in] movingPollPeriod     The time between polls when any axis is moving
-    /// \param[in] idlePollPeriod       The time between polls when no axis is moving
     XeryonMotorController(const char *portName, const char *XeryonMotorController, int numAxes,
                           double movingPollPeriod, double idlePollPeriod);
-    void report(FILE *fp, int level);
-
-    /// \brief Returns a pointer to a XeryonMotorAxis object
-    /// \param[in] asynUser structure that encodes the axis index number
-    /// \returns NULL if the axis number encoded in pasynUser is invalid
-    XeryonMotorAxis *getAxis(asynUser *pasynUser);
-
-    /// \brief Returns a pointer to a XeryonMotorAxis object
-    /// \param[in] axisNo Axis index number
-    /// \returns NULL if the axis number is invalid
-    XeryonMotorAxis *getAxis(int axisNo);
-
-    asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+    void report(FILE *fp, int level) override;
+    XeryonMotorAxis *getAxis(asynUser *pasynUser) override;
+    XeryonMotorAxis *getAxis(int axisNo) override;
+    asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value) override;
 
   private:
     // Map of extra controller commands we expose through asyn parameters.
